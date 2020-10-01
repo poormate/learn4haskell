@@ -473,7 +473,7 @@ Implement a function that returns the last digit of a given number.
   whether it works for you!
 -}
 lastDigit :: Integer -> Integer
-lastDigit n = mod n 10
+lastDigit n = mod (abs n) 10
 
 
 {- |
@@ -623,10 +623,9 @@ specifying complex expressions.
 -}
 
 sumLast2 :: Integer -> Integer
-sumLast2 n = lastDigit + secondToLast
+sumLast2 n = lastDigit n + lastDigit nWithoutLast
   where
-    lastDigit = mod n 10
-    secondToLast = mod (div n 10) 10
+    nWithoutLast = div n 10
 
 
 {- |
@@ -649,8 +648,8 @@ aren't ready for this boss yet!
 
 firstDigit :: Integer -> Integer
 firstDigit n
-  | n < 10 = n
-  | otherwise = firstDigit (div n 10)
+  | abs n < 10 = abs n
+  | otherwise = firstDigit (div (abs n) 10)
 
 
 {-
