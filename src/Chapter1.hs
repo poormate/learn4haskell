@@ -625,7 +625,7 @@ specifying complex expressions.
 sumLast2 :: Integer -> Integer
 sumLast2 n = lastDigit n + lastDigit nWithoutLast
   where
-    nWithoutLast = div n 10
+    nWithoutLast = if n > 0 then div n 10 else div (n + 10) 10
 
 
 {- |
