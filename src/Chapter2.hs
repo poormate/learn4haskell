@@ -137,30 +137,39 @@ functions in GHCi and insert the corresponding resulting output below:
 List of booleans:
 >>> :t [True, False]
 [True, False] :: [Bool]
+
 String is a list of characters:
 >>> :t "some string"
 "some string" :: [Char]
+
 Empty list:
 >>> :t []
 [] :: [a]
+
 Append two lists:
 >>> :t (++)
 (++) :: [a] -> [a] -> [a]
+
 Prepend an element at the beginning of a list:
 >>> :t (:)
 (:) :: a -> [a] -> [a]
+
 Reverse a list:
 >>> :t reverse
 reverse :: [a] -> [a]
+
 Take first N elements of a list:
 >>> :t take
 take :: Int -> [a] -> [a]
+
 Create list from N same elements:
 >>> :t replicate
 replicate :: Int -> a -> [a]
+
 Split a string by line breaks:
 >>> :t lines
 lines :: String -> [String]
+
 Join a list of strings with line breaks:
 >>> :t unlines
 unlines :: [String] -> String
@@ -177,31 +186,43 @@ Evaluate the following expressions in GHCi and insert the answers. Try
 to guess first, what you will see.
 
 >>> [10, 2] ++ [3, 1, 5]
-[10, 2, 3, 1, 5]
+[10,2,3,1,5]
+
 >>> [] ++ [1, 4]  -- [] is an empty list
-[1, 4]
+[1,4]
+
 >>> 3 : [1, 2]
-[3, 1, 2]
+[3,1,2]
+
 >>> 4 : 2 : [5, 10]  -- prepend multiple elements
-[4, 2, 5, 10]
+[4,2,5,10]
+
 >>> [1 .. 10]  -- list ranges
-[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+[1,2,3,4,5,6,7,8,9,10]
+
 >>> [10 .. 1]
 []
+
 >>> [10, 9 .. 1]  -- backwards list with explicit step
-[10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
+[10,9,8,7,6,5,4,3,2,1]
+
 >>> length [4, 10, 5]  -- list length
 3
+
 >>> replicate 5 True
-[True, True, True, True, True]
+[True,True,True,True,True]
+
 >>> take 5 "Hello, World!"
 "Hello"
+
 >>> drop 5 "Hello, World!"
 ", World!"
+
 >>> zip "abc" [1, 2, 3]  -- convert two lists to a single list of pairs
-[('a', 1), ('b', 2), ('c', 3)]
+[('a',1),('b',2),('c',3)]
+
 >>> words "Hello   Haskell     World!"  -- split the string into the list of words
-["Hello", "Haskell", "World!"]
+["Hello","Haskell","World!"]
 
 
 👩‍🔬 Haskell has a lot of syntax sugar. In the case with lists, any
@@ -328,7 +349,7 @@ ghci> :l src/Chapter2.hs
 -}
 subList :: Int -> Int -> [a] -> [a]
 subList a b xs
-  | a < 0 || b < 0 = []
+  | a < 0 || b < 0 || b < a = []
   | otherwise = drop a (take (b+1) xs)
 
 {- |
@@ -496,7 +517,7 @@ True
 False
 -}
 isThird42 :: (Eq a, Num a) => [a] -> Bool
-isThird42 (x:y:z:xs) = z == 42
+isThird42 (x:y:42:xs) = True
 isThird42 _ = False
 
 
@@ -740,8 +761,8 @@ the list with only those lists that contain a passed element.
 
 🕯 HINT: Use the 'elem' function to check whether an element belongs to a list
 -}
-contains :: (Eq a, Num a) => a -> [[a]] -> [[a]]
-contains n = filter (\xs -> n `elem` xs)
+contains :: Eq a => a -> [[a]] -> [[a]]
+contains n = filter $ elem n
 
 
 {- |
@@ -843,7 +864,11 @@ list.
 🕯 HINT: Use the 'cycle' function
 -}
 rotate :: Int -> [a] -> [a]
-rotate n xs = drop n $ take (length xs + n) (cycle xs)
+rotate n xs
+  | n < 0 = []
+  | otherwise = drop n' $ take (length xs + n') (cycle xs)
+  where
+    n' = n `rem` length xs
 
 {- |
 =💣= Task 12*
