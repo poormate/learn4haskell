@@ -344,6 +344,19 @@ of a book, but you are not limited only by the book properties we described.
 Create your own book type of your dreams!
 -}
 
+data Book = Book
+  { title           :: String
+  , author          :: String
+  , coverArtist     :: String
+  , country         :: String
+  , language        :: String
+  , genre           :: String
+  , publisher       :: String
+  , publicationYear :: Int
+  , pages           :: Int
+  , isbn            :: String
+  } deriving (Show)
+
 {- |
 =⚔️= Task 2
 
@@ -373,6 +386,27 @@ after the fight. The battle has the following possible outcomes:
    doesn't earn any money and keeps what they had before.
 
 -}
+
+data Knight = Knight
+  { knightHealth :: Integer
+  , knightAttack :: Integer
+  , knightGold   :: Integer
+  } deriving (Show)
+
+data Monster = Monster
+  { monsterHealth :: Integer
+  , monsterAttack :: Integer
+  , monsterGold   :: Integer
+  } deriving (Show)
+
+fight :: Monster -> Knight -> Integer
+fight m k
+  | monsterAttack m < 1 && knightAttack k < 1 = knightGold k
+  | kSteps <= mSteps = knightGold k + monsterGold m
+  | otherwise = -1
+  where
+    kSteps = ceiling $ fromInteger (monsterHealth m) / fromInteger (knightAttack k)
+    mSteps = ceiling $ fromInteger (knightHealth k) / fromInteger (monsterAttack m)
 
 {- |
 =🛡= Sum types
@@ -460,6 +494,16 @@ Create a simple enumeration for the meal types (e.g. breakfast). The one who
 comes up with the most number of names wins the challenge. Use your creativity!
 -}
 
+data MealTypes
+  = Breakfast
+  | Brunch
+  | Lunch
+  | Dinner
+  | Supper
+  | Barbecue
+  | Picnic
+  | Potluck
+
 {- |
 =⚔️= Task 4
 
@@ -479,6 +523,38 @@ After defining the city, implement the following functions:
    complicated task, walls can be built only if the city has a castle
    and at least 10 living people inside
 -}
+
+data Castle = NoCastle | Castle
+  { name :: String
+  , wall :: Bool
+  } deriving (Show, Eq)
+
+data Building = Church | Building
+  deriving (Show)
+
+data House = One | Two | Three | Four
+  deriving (Show, Enum)
+
+data City = City
+  { castle :: Castle
+  , building :: Building
+  , houses :: [House]
+  } deriving (Show)
+
+buildCastle :: City -> String -> City
+buildCastle c name = c {castle = Castle name ((ca /= NoCastle) && wall ca)}
+  where ca = castle c
+
+buildHouse :: City -> House -> City
+buildHouse c h = c {houses = h : houses c}
+
+buildWalls :: City -> City
+buildWalls c
+  | population c < 10 || castle c == NoCastle = c
+  | otherwise = c {castle = Castle (name $ castle c) True}
+
+population :: City -> Int
+population c = foldr (\h s -> s + fromEnum h + 1) 0 (houses c)
 
 {-
 =🛡= Newtypes
@@ -560,22 +636,31 @@ introducing extra newtypes.
 🕯 HINT: if you complete this task properly, you don't need to change the
     implementation of the "hitPlayer" function at all!
 -}
+
+newtype Health = Health Int
+newtype Armor = Armor Int
+newtype Attack = Attack Int
+newtype Dexterity = Dexterity Int
+newtype Strength = Strength Int
+newtype Damage = Damage Int
+newtype Defense = Defense Int
+
 data Player = Player
-    { playerHealth    :: Int
-    , playerArmor     :: Int
-    , playerAttack    :: Int
-    , playerDexterity :: Int
-    , playerStrength  :: Int
+    { playerHealth    :: Health
+    , playerArmor     :: Armor
+    , playerAttack    :: Attack
+    , playerDexterity :: Dexterity
+    , playerStrength  :: Strength
     }
 
-calculatePlayerDamage :: Int -> Int -> Int
-calculatePlayerDamage attack strength = attack + strength
+calculatePlayerDamage :: Attack -> Strength -> Damage
+calculatePlayerDamage (Attack attack) (Strength strength) = Damage (attack + strength)
 
-calculatePlayerDefense :: Int -> Int -> Int
-calculatePlayerDefense armor dexterity = armor * dexterity
+calculatePlayerDefense :: Armor -> Dexterity -> Defense
+calculatePlayerDefense (Armor armor) (Dexterity dexterity) = Defense (armor * dexterity)
 
-calculatePlayerHit :: Int -> Int -> Int -> Int
-calculatePlayerHit damage defense health = health + defense - damage
+calculatePlayerHit :: Damage -> Defense -> Health -> Health
+calculatePlayerHit (Damage damage) (Defense defense) (Health health) = Health (health + defense - damage)
 
 -- The second player hits first player and the new first player is returned
 hitPlayer :: Player -> Player -> Player
@@ -753,6 +838,19 @@ parametrise data types in places where values can be of any general type.
   maybe-treasure ;)
 -}
 
+data Lair p t = Lair
+  { dragon :: Dragon p
+  , treasure :: Maybe (TreasureChest t)
+  } deriving (Show)
+
+newtype Dragon p = Dragon { magicalPower :: p }
+  deriving (Show)
+
+data TreasureChest t = TreasureChest
+    { treasureChestGold :: Int
+    , treasureChestLoot :: t
+    } deriving (Show)
+
 {-
 =🛡= Typeclasses
 
@@ -907,9 +1005,23 @@ Implement instances of "Append" for the following types:
   ✧ *(Challenge): "Maybe" where append is appending of values inside "Just" constructors
 
 -}
+
+newtype Gold = Gold Integer
+  deriving (Show)
+
 class Append a where
     append :: a -> a -> a
 
+instance Append Gold where
+    append (Gold x) (Gold y) = Gold (x + y)
+
+instance Append [a] where
+    append x y = x ++ y
+
+instance Append a => Append (Maybe a) where
+  append Nothing y = y
+  append x Nothing = x
+  append (Just x) (Just y) = Just (append x y)
 
 {-
 =🛡= Standard Typeclasses and Deriving
@@ -971,6 +1083,29 @@ implement the following functions:
 🕯 HINT: to implement this task, derive some standard typeclasses
 -}
 
+data Day
+  = Monday
+  | Tuesday
+  | Wednesday
+  | Thursday
+  | Friday
+  | Saturday
+  | Sunday
+  deriving (Enum, Show)
+
+isWeekend :: Day -> Bool
+isWeekend Saturday = True
+isWeekend Sunday = True
+isWeekend _ = False
+
+nextDay :: Day -> Day
+nextDay Sunday = Monday
+nextDay day = succ day
+
+daysToParty :: Day -> Int
+daysToParty Friday = 7
+daysToParty day = (fromEnum Friday + 7 - fromEnum day) `rem` 7
+
 {-
 =💣= Task 9*
 
@@ -1010,6 +1145,40 @@ contestants, and write a function that decides the outcome of a fight!
 {-
 You did it! Now it is time to the open pull request with your changes
 and summon @vrom911 and @chshersh for the review!
+-}
+
+{- data Fighter fType fStats fAction = Fighter
+  { fighterType :: fType
+  , fighterStats :: fStats
+  , fighterActions :: [fAction]
+  } deriving (Show)
+
+data FighterType = FKnight | FMonster
+  deriving (Show)
+
+data KnightStats = KnightStats
+  { knightHP :: Health
+  , knightDef :: Defense
+  , knightAtt :: Attack
+  } deriving (Show)
+
+data MonsterStats = MonsterStats
+  { monsterHP :: Health
+  , monsterAtt :: Attack
+  } deriving (Show)
+
+data KnightAction = KAttack | DrinkPot | CastSpell
+  deriving (Show)
+
+data MonsterAction = MAttack | RunAway
+  deriving (Show)
+
+fight2 :: Fighter -> Fighter -> String
+fight2 f1 f2 = winner f1 0 f2 0 True
+  where
+    winner :: Fighter -> Int -> Fighter -> Int -> Bool -> String
+    winner f1 action1 f2 action2 turn1
+      | otherwise = "a"
 -}
 
 {-
