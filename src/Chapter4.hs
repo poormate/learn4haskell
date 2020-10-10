@@ -300,6 +300,7 @@ values and apply them to the type level?
 -}
 instance Functor (Secret e) where
     fmap :: (a -> b) -> Secret e a -> Secret e b
+    fmap _ (Trap e) = Trap e
     fmap f (Reward a) = Reward (f a)
 
 {- |
@@ -489,8 +490,10 @@ instance Applicative (Secret e) where
     pure = Reward
 
     (<*>) :: Secret e (a -> b) -> Secret e a -> Secret e b
-    Reward f <*> Trap x = Trap x
-    Reward f <*> Reward x = Reward (f x)
+    Trap e <*> Trap _ = Trap e
+    Trap e <*> Reward _ = Trap e
+    Reward _ <*> Trap e = Trap e
+    Reward f <*> Reward a = Reward (f a)
 
 {- |
 =⚔️= Task 5
@@ -510,7 +513,13 @@ instance Applicative List where
 
     (<*>) :: List (a -> b) -> List a -> List b
     Empty <*> _ = Empty
-    Cons f Empty <*> x = f <$> x
+    _ <*> Empty = Empty
+    Cons f fs <*> Cons x xs = Cons (f x) (cat (fmap f xs) (fs <*> xs))
+
+cat :: List a -> List a -> List a
+cat Empty ys = ys
+cat xs Empty = xs
+cat (Cons x xs) ys = Cons x (cat xs ys)
 
 {- |
 =🛡= Monad
@@ -636,12 +645,7 @@ Implement the 'Monad' instance for our lists.
 
 instance Monad List where
     (>>=) :: List a -> (a -> List b) -> List b
-    return x = Cons x Empty
     xs >>= f = join $ f <$> xs
-
-cat :: List a -> List a -> List a
-cat Empty ys = ys
-cat (Cons x xs) ys = Cons x (cat xs ys)
 
 join :: List (List a) -> List a
 join Empty = Empty
@@ -665,7 +669,7 @@ Can you implement a monad version of AND, polymorphic over any monad?
 -}
 
 andM :: (Monad m) => m Bool -> m Bool -> m Bool
-andM a b = pure (&&) >>= (\f -> f <$> a <*> b)
+andM a b = a >>= (\a' -> b >>= (\b' -> pure $ a' && b'))
 
 {- |
 =🐉= Task 9*: Final Dungeon Boss
