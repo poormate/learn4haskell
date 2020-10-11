@@ -713,6 +713,21 @@ Specifically,
  ❃ Implement the function to convert Tree to list
 -}
 
+data BinaryTree a = Nil | Node a (BinaryTree a) (BinaryTree a)
+  deriving (Show)
+
+instance Functor BinaryTree where
+  fmap :: (a -> b) -> BinaryTree a -> BinaryTree b
+  fmap f (Node x y z) = Node (f x) (fmap f y) (fmap f z)
+  fmap _ Nil = Nil
+
+reverseTree :: BinaryTree a -> BinaryTree a
+reverseTree Nil = Nil
+reverseTree (Node x y z) = Node x (reverseTree z) (reverseTree y)
+
+treeToList :: BinaryTree a -> List a
+treeToList Nil = Empty
+treeToList (Node x y z) = Cons x (cat (treeToList y) (treeToList z))
 
 {-
 You did it! Now it is time to the open pull request with your changes
